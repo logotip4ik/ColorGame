@@ -9,6 +9,7 @@
           max-width="300px"
           class="mx-auto">
           <v-card-title>
+            <span class="h6 mx-auto">Guess color by it's hex</span>
             <v-text-field
               class="mt-5"
               v-model="guessColor"
