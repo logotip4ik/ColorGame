@@ -1,5 +1,6 @@
 <template>
   <v-dialog
+    persistent
     v-model="successModel"
     max-width="500px">
     <v-card
@@ -8,7 +9,7 @@
         Hoorey you guess color 🎉
       </v-card-title>
       <v-card-text>
-        Congratulations this was {{color}} with name <pre>{{name}}</pre>
+        Congratulations this was {{color}} with name: <pre style="font-size: 20px">{{name}}</pre>
       </v-card-text>
     </v-card>
   </v-dialog>

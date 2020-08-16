@@ -1,9 +1,26 @@
 <template>
   <v-app>
     <v-main>
-      <Navbar/>
-      <v-scale-transition>
-        <v-container>
+      <Navbar
+        :guessed="guessed"/>
+      <v-container>
+        <v-card
+          outlined
+          max-width="300px"
+          class="mx-auto">
+          <v-card-title>
+            <v-text-field
+              class="mt-5"
+              v-model="guessColor"
+              color="grey darken-4"
+              outlined
+              disabled/>
+          </v-card-title>
+        </v-card>
+        <v-card
+          outlined
+          max-width="700px"
+          class="mt-4 px-3 mx-auto">
           <v-row
             v-for="(row, i) in colors"
             :key="i"
@@ -19,8 +36,27 @@
                 :color="color"/>
             </v-col>
           </v-row>
+        </v-card>
+        <v-container fluid>
+          <v-btn
+            fixed right bottom
+            dark
+            color="deep-orange darken-3"
+            fab
+            @click="skip">
+            <v-icon>mdi-chevron-right</v-icon>
+          </v-btn>
+          <v-btn
+            fixed left bottom
+            dark
+            outlined
+            color="deep-orange darken-3"
+            fab
+            @click="restart">
+            <v-icon>mdi-restart</v-icon>
+          </v-btn>
         </v-container>
-      </v-scale-transition>
+      </v-container>
       <SuccessOverlay
         :success="success"
         :color="colorGuess"
@@ -47,9 +83,12 @@ export default {
     success: false,
     colorGuess: '',
     colorName: '',
+    guessed: 0,
   }),
   beforeMount() {
     this.genColors();
+    if (!localStorage.guessed) localStorage.guessed = 0;
+    else this.guessed = Number(localStorage.guessed);
   },
   computed: {
     guessColor() {
@@ -57,23 +96,48 @@ export default {
     },
   },
   methods: {
+    async fetchColor(color) {
+      const colorApi = `https://cors-anywhere.herokuapp.com/http://thecolorapi.com/id?hex=${color.slice(1)}&format=json`;
+      let name = await fetch(colorApi, {
+        headers: { Origin: 'http://thecolorapi.com/' },
+      });
+      name = await name.json();
+      return name.name.value;
+    },
+    changeScore(isAdding = false) {
+      const guessed = Number(localStorage.guessed);
+      if (isAdding) {
+        localStorage.guessed = guessed + 1;
+        this.guessed = guessed + 1;
+      } else {
+        localStorage.guessed = guessed - 1;
+        this.guessed = guessed - 1;
+      }
+    },
     async cliked(color) {
       const guess = this.guessColor;
-      const colorApi = `https://cors-anywhere.herokuapp.com/http://thecolorapi.com/id?hex=${guess.slice(1)}&format=json`;
       if (color === guess) {
+        this.changeScore(true);
         this.success = !this.success;
         this.colorGuess = guess;
-        let name = await fetch(colorApi + guess.slice(1), {
-          headers: { Origin: 'http://thecolorapi.com/' },
-        });
-        name = await name.json();
-        this.colorName = name.name.value;
+        this.colorName = await this.fetchColor(guess);
         setTimeout(() => {
           this.genColors();
           this.success = false;
           this.colorName = '';
-        }, 2000);
+        }, 3000);
+      } else {
+        this.changeScore();
       }
+    },
+    skip() {
+      this.changeScore();
+      this.genColors();
+    },
+    restart() {
+      localStorage.guessed = 0;
+      this.guessed = 0;
+      this.genColors();
     },
     genColors() {
       const res = [];

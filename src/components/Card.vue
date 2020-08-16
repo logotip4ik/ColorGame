@@ -1,7 +1,7 @@
 <template>
   <v-card
     @click="$emit('clicked-color', color)"
-    height="10rem"
+    height="7rem"
     max-width="450px"
     :color="color">
     <v-card-text>
