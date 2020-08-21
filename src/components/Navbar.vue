@@ -1,8 +1,10 @@
+// deep-orange darken-3
+
 <template>
   <v-app-bar
     dense
     dark
-    color="deep-orange darken-3">
+    color="grey darken-4">
     <v-toolbar-title>
       Color Game
     </v-toolbar-title>
