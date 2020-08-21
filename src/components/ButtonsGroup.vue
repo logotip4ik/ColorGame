@@ -54,11 +54,6 @@ export default {
       required: true,
     },
   },
-  watch: {
-    toggle(val) {
-      console.log(val);
-    },
-  },
   data() {
     return {
       toggle: undefined,

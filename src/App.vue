@@ -118,7 +118,7 @@ export default {
       try {
         let name = await fetch(colorApi, {
           headers: {
-            Origin: 'http://thecolorapi.com/',
+            Origin: 'http://localhost:8080/',
             'Access-Control-Allow-Origin': '*',
           },
         });
@@ -152,12 +152,10 @@ export default {
         this.success = !this.success;
         this.colorGuess = guess;
         this.loading = !this.loading;
-        // this.colorName = await this.fetchColor(guess);
-        let colorName;
         if (!this.noInternet) {
-          colorName = await this.fetchColor(guess);
+          this.colorName = await this.fetchColor(guess);
         }
-        if (!colorName) {
+        if (!this.colorName) {
           this.noNetwork = true;
           this.colorName = 'No Internet Connection';
         }
