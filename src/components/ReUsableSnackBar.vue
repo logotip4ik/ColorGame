@@ -1,25 +1,29 @@
 <template>
   <v-snackbar
-    v-model="network"
+    v-model="showSnack"
     :timeout="5000 * 2"
   >
-    No Intrenet connection.
+    {{text}}
   </v-snackbar>
 </template>
 
 <script>
 export default {
-  name: 'NoNetworkSnackBar',
+  name: 'ReUsableSnackBar',
   props: {
-    noInternet: {
+    show: {
       type: Boolean,
+      required: true,
+    },
+    text: {
+      type: String,
       required: true,
     },
   },
   computed: {
-    network: {
+    showSnack: {
       get() {
-        return this.noInternet;
+        return this.show;
       },
       set() {
         this.$emit('close');

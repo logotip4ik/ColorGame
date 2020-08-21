@@ -47,10 +47,14 @@
           </v-row>
         </v-card>
       </v-container>
+      <v-overlay :value="loadingPage" :dark="dark">
+        <v-progress-circular indeterminate size="64" />
+      </v-overlay>
       <ButtonsGroup
         :darkMode="dark"
         @skip="skip"
         @restart="restart"
+        @history="showHistory = !showHistory"
         @toggle-dark-mode="toggleDarkMode"/>
       <SuccessOverlay
         :loading="loading"
@@ -62,20 +66,29 @@
         :nope="nope"
         :nopeColor="nopeColor"
         @close="closeSnackBar"/>
-      <NoNetworkSnackBar
-        :noInternet="noNetwork"
+      <ReUsableSnackBar
+        :show="error"
+        :text="errorText"
         @close="network = false"/>
+      <HistoryOverlay
+        :show="showHistory"
+        :dark="dark"
+        @close="showHistory = !showHistory"/>
     </v-main>
   </v-app>
 </template>
 
 <script>
+import { openDB } from 'idb';
+import { v4 } from 'uuid';
+
 import Card from './components/Card.vue';
 import Navbar from './components/Navbar.vue';
 import SnackBar from './components/SnackBar.vue';
 import ButtonsGroup from './components/ButtonsGroup.vue';
+import HistoryOverlay from './components/HistoryOverlay.vue';
 import SuccessOverlay from './components/SuccessOverlay.vue';
-import NoNetworkSnackBar from './components/NoNetworkSnackBar.vue';
+import ReUsableSnackBar from './components/ReUsableSnackBar.vue';
 
 export default {
   name: 'App',
@@ -84,47 +97,67 @@ export default {
     Navbar,
     SnackBar,
     ButtonsGroup,
+    HistoryOverlay,
     SuccessOverlay,
-    NoNetworkSnackBar,
+    ReUsableSnackBar,
   },
   data: () => ({
     colors: [],
     loading: false,
+    loadingPage: false,
     success: false,
     firstTry: true,
-    noNetwork: false,
+    showHistory: false,
+    error: false,
     dark: false,
     nope: false,
+    db: null,
     nopeColor: '',
+    errorText: '',
     colorGuess: '',
     colorName: '',
+    id: '',
     guessed: 0,
   }),
-  beforeMount() {
-    this.genColors();
-    if (!localStorage.guessed) localStorage.guessed = 0;
-    else this.guessed = Number(localStorage.guessed);
-    if (!localStorage.darkMode) localStorage.darkMode = false;
-    else this.dark = !!JSON.parse(localStorage.darkMode);
+  async beforeMount() {
+    await this.prepare();
   },
   computed: {
     guessColor() {
-      return this.colors[Math.floor(Math.random() * 2)][Math.floor(Math.random() * 3)];
+      return this.colors.length > 0
+        ? this.colors[Math.floor(Math.random() * 2)][Math.floor(Math.random() * 3)]
+        : '#FFFFFF';
+    },
+  },
+  watch: {
+    guessColor() {
+      this.id = v4();
     },
   },
   methods: {
+    async prepare() {
+      this.loadingPage = true;
+      this.genColors();
+      await this.CheckDB();
+      if (!localStorage.guessed) localStorage.guessed = 0;
+      else this.guessed = Number(localStorage.guessed);
+      if (!localStorage.darkMode) localStorage.darkMode = false;
+      else this.dark = !!JSON.parse(localStorage.darkMode);
+      this.loadingPage = false;
+    },
     async fetchColor(color) {
       const colorApi = `https://cors-anywhere.herokuapp.com/http://thecolorapi.com/id?hex=${color.slice(1)}`;
       try {
         let name = await fetch(colorApi, {
           headers: {
-            Origin: 'http://localhost:8080/',
+            Origin: process.env.HOST || 'http://localhost:8080/',
             'Access-Control-Allow-Origin': '*',
           },
         });
         name = await name.json();
         return name.name.value;
       } catch (error) {
+        console.log(error);
         return undefined;
       }
     },
@@ -151,12 +184,13 @@ export default {
         this.firstTry = !this.firstTry;
         this.success = !this.success;
         this.colorGuess = guess;
-        this.loading = !this.loading;
-        if (!this.noInternet) {
+        this.loading = true;
+        if (!this.error) {
           this.colorName = await this.fetchColor(guess);
         }
         if (!this.colorName) {
-          this.noNetwork = true;
+          this.error = true;
+          this.errorText = 'No Internet Connection';
           this.colorName = 'No Internet Connection';
         }
         setTimeout(() => {
@@ -170,6 +204,8 @@ export default {
         this.nopeColor = color;
       }
       this.loading = false;
+      await this.addColorsToHistory();
+      // this.getAllColorHistory();
     },
     skip() {
       this.changeScore();
@@ -200,14 +236,50 @@ export default {
       localStorage.darkMode = !this.dark;
       this.dark = !this.dark;
     },
+    async addColorsToHistory() {
+      const date = new Date();
+      const dataColors = {
+        colors: this.colors,
+        guessedColor: this.guessColor,
+        date: date.toISOString().substring(0, 10),
+        time: date.toISOString().substring(11, 19),
+        id: this.id,
+      };
+      // if (this.prevIteration !== this.iteration) {
+      // this.prevIteration += 1;
+      const store = this.db.transaction('history', 'readwrite').objectStore('history');
+      store.put(dataColors);
+      // }
+      // const date = new Date();
+      // const formatedDate = `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`;
+      // if (!store.has(dataColors)) return;
+      // store.has();
+      // console.log('I was putting this: ', dataColors);
+      // const colors = await store.getAll();
+      // console.log(colors);
+      // console.log(await store.getAll());
+    },
+    async getAllColorHistory() {
+      const store = this.db.transaction('history', 'readonly').objectStore('history');
+      console.log(await store.get(0));
+    },
+    async CheckDB() {
+      const db = await openDB('colorHistory', 1, {
+        upgrade(dataBase) {
+          dataBase.createObjectStore('history', {
+            keyPath: 'id',
+          });
+        },
+      });
+      // const store = db.transaction('history', 'readwrite').objectStore('history');
+      // store.put()
+      this.db = db;
+    },
   },
 };
 </script>
 
 <style scoped>
-/* .dark-input .v-input__control .v-input__slot .v-text-field__slot input:disabled{
-  color: black!important;
-} */
 .opacity-transition {
   transition: all 0.5s!important;
 }

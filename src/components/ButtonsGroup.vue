@@ -27,7 +27,16 @@
             outlined
             elevation="4"
             :dark="darkMode"
-            @click="click(true)">
+            @click="click('history')">
+            <v-icon>mdi-history</v-icon>
+          </v-btn>
+          <v-btn
+            fab
+            large
+            outlined
+            elevation="4"
+            :dark="darkMode"
+            @click="click('restart')">
             <v-icon>mdi-restart</v-icon>
           </v-btn>
           <v-btn
@@ -36,7 +45,7 @@
             outlined
             elevation="4"
             :dark="darkMode"
-            @click="click">
+            @click="click('skip')">
             <v-icon>mdi-chevron-right</v-icon>
           </v-btn>
         </v-btn-toggle>
@@ -60,9 +69,10 @@ export default {
     };
   },
   methods: {
-    click(restart = false) {
-      if (restart) this.$emit('restart');
-      else this.$emit('restart');
+    click(params) {
+      if (params === 'restart') this.$emit('restart');
+      else if (params === 'skip') this.$emit('skip');
+      else if (params === 'history') this.$emit('history');
       setInterval(() => { this.toggle = undefined; }, 750);
     },
   },
