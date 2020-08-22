@@ -71,8 +71,9 @@
         :text="errorText"
         @close="network = false"/>
       <HistoryOverlay
-        :show="showHistory"
         :dark="dark"
+        :colors="history"
+        :show="showHistory"
         @close="showHistory = !showHistory"/>
     </v-main>
   </v-app>
@@ -103,6 +104,7 @@ export default {
   },
   data: () => ({
     colors: [],
+    history: [],
     loading: false,
     loadingPage: false,
     success: false,
@@ -120,6 +122,7 @@ export default {
     guessed: 0,
   }),
   async beforeMount() {
+    await this.CheckDB();
     await this.prepare();
   },
   computed: {
@@ -130,14 +133,15 @@ export default {
     },
   },
   watch: {
-    guessColor() {
+    async guessColor() {
       this.id = v4();
+      await this.getAllColorHistory();
     },
   },
   methods: {
     async prepare() {
       this.loadingPage = true;
-      this.genColors();
+      await this.genColors();
       await this.CheckDB();
       if (!localStorage.guessed) localStorage.guessed = 0;
       else this.guessed = Number(localStorage.guessed);
@@ -193,8 +197,8 @@ export default {
           this.errorText = 'No Internet Connection';
           this.colorName = 'No Internet Connection';
         }
-        setTimeout(() => {
-          this.genColors();
+        setTimeout(async () => {
+          await this.genColors();
           this.success = false;
           this.colorName = '';
         }, 3000);
@@ -204,19 +208,17 @@ export default {
         this.nopeColor = color;
       }
       this.loading = false;
-      await this.addColorsToHistory();
-      // this.getAllColorHistory();
     },
-    skip() {
+    async skip() {
       this.changeScore();
-      this.genColors();
+      await this.genColors();
     },
     restart() {
       localStorage.guessed = 0;
       this.guessed = 0;
       this.genColors();
     },
-    genColors() {
+    async genColors() {
       const res = [];
       for (let i = 0; i < 2; i += 1) {
         const row = [];
@@ -227,6 +229,7 @@ export default {
         res.push(row);
       }
       this.colors = res;
+      await this.addColorsToHistory();
     },
     closeSnackBar() {
       this.nope = false;
@@ -245,23 +248,12 @@ export default {
         time: date.toISOString().substring(11, 19),
         id: this.id,
       };
-      // if (this.prevIteration !== this.iteration) {
-      // this.prevIteration += 1;
       const store = this.db.transaction('history', 'readwrite').objectStore('history');
       store.put(dataColors);
-      // }
-      // const date = new Date();
-      // const formatedDate = `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`;
-      // if (!store.has(dataColors)) return;
-      // store.has();
-      // console.log('I was putting this: ', dataColors);
-      // const colors = await store.getAll();
-      // console.log(colors);
-      // console.log(await store.getAll());
     },
     async getAllColorHistory() {
       const store = this.db.transaction('history', 'readonly').objectStore('history');
-      console.log(await store.get(0));
+      this.history = await store.getAll();
     },
     async CheckDB() {
       const db = await openDB('colorHistory', 1, {
@@ -271,8 +263,6 @@ export default {
           });
         },
       });
-      // const store = db.transaction('history', 'readwrite').objectStore('history');
-      // store.put()
       this.db = db;
     },
   },

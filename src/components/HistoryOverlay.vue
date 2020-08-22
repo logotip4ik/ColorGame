@@ -21,7 +21,9 @@
     <v-card
       :dark="dark">
       <v-container>
-        {{colorDates}}
+        <v-list v-for="(date, i) in getcolorDates" :key="i">
+          <v-subheader>{{new Date(date).toDateString()}}</v-subheader>
+        </v-list>
       </v-container>
     </v-card>
   </v-dialog>
@@ -41,7 +43,7 @@ export default {
     },
     colors: {
       type: Array,
-      // required: true,
+      required: true,
     },
   },
   computed: {
@@ -53,12 +55,12 @@ export default {
         this.$emit('close');
       },
     },
-    colorDates() {
+    getcolorDates() {
       if (!this.colors) return [];
-      const res = [];
+      const res = new Set();
       for (let i = 0; i < this.colors.length; i += 1) {
-        const color = this.colors[i];
-        res.push(color);
+        const date = this.colors[i]?.date;
+        res.add(date);
       }
       return res;
     },
