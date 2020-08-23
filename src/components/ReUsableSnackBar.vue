@@ -1,7 +1,7 @@
 <template>
   <v-snackbar
     v-model="showSnack"
-    :timeout="5000 * 2"
+    :timeout="timeout"
   >
     {{text}}
   </v-snackbar>
@@ -18,6 +18,11 @@ export default {
     text: {
       type: String,
       required: true,
+    },
+    timeout: {
+      type: Number,
+      required: false,
+      default: 5000 * 2,
     },
   },
   computed: {

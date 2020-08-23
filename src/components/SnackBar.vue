@@ -1,8 +1,7 @@
 <template>
   <v-snackbar
     v-model="nopeBool"
-    timeout="2000"
-  >
+    timeout="2000">
   Nope this was color: {{nopeColor}}
   <template v-slot:action="{ attrs }">
     <v-btn

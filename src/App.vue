@@ -114,6 +114,7 @@ export default {
     dark: false,
     nope: false,
     db: null,
+    prevId: null,
     nopeColor: '',
     errorText: '',
     colorGuess: '',
@@ -122,7 +123,6 @@ export default {
     guessed: 0,
   }),
   async beforeMount() {
-    await this.CheckDB();
     await this.prepare();
   },
   computed: {
@@ -141,8 +141,8 @@ export default {
   methods: {
     async prepare() {
       this.loadingPage = true;
-      await this.genColors();
       await this.CheckDB();
+      await this.genColors();
       if (!localStorage.guessed) localStorage.guessed = 0;
       else this.guessed = Number(localStorage.guessed);
       if (!localStorage.darkMode) localStorage.darkMode = false;
@@ -198,6 +198,7 @@ export default {
           this.colorName = 'No Internet Connection';
         }
         setTimeout(async () => {
+          await this.addColorsToHistory(true);
           await this.genColors();
           this.success = false;
           this.colorName = '';
@@ -239,24 +240,32 @@ export default {
       localStorage.darkMode = !this.dark;
       this.dark = !this.dark;
     },
-    async addColorsToHistory() {
+    async addColorsToHistory(guessed = false) {
       const date = new Date();
+      // eslint-disable-next-line no-nested-ternary
+      // eslint-disable-next-line
+      const hours = date.getHours().toString().length === 1 ? `0${date.getHours()}` : date.getHours();
+      const minutes = date.getMinutes().toString().length === 1 ? `0${date.getMinutes()}` : date.getMinutes();
+      const seconds = date.getSeconds().toString().length === 1 ? `0${date.getSeconds()}` : date.getSeconds();
+      const time = `${hours}:${minutes}:${seconds}`;
+      const id = v4();
       const dataColors = {
         colors: this.colors,
-        guessedColor: this.guessColor,
+        guessedColor: guessed ? this.guessColor : null,
         date: date.toISOString().substring(0, 10),
-        time: date.toISOString().substring(11, 19),
-        id: this.id,
+        time,
+        id: guessed ? this.prevId : id,
       };
       const store = this.db.transaction('history', 'readwrite').objectStore('history');
       store.put(dataColors);
+      this.prevId = id;
     },
     async getAllColorHistory() {
       const store = this.db.transaction('history', 'readonly').objectStore('history');
       this.history = await store.getAll();
     },
     async CheckDB() {
-      const db = await openDB('colorHistory', 1, {
+      const db = await openDB('colorHistory', 9, {
         upgrade(dataBase) {
           dataBase.createObjectStore('history', {
             keyPath: 'id',
