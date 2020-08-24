@@ -116,7 +116,7 @@ export default {
       return this.colors.sort((a, b) => {
         const aTime = `${a.date} ${a.time}`;
         const bTime = `${b.date} ${b.time}`;
-        return new Date(bTime) - new Date(aTime);
+        return new Date(aTime) - new Date(bTime);
       });
     },
     getColorDates() {
