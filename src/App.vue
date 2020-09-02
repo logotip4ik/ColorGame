@@ -198,7 +198,7 @@ export default {
           this.colorName = 'No Internet Connection';
         }
         setTimeout(async () => {
-          await this.addColorsToHistory(true);
+          await this.addColorsToHistory(true, this.colorName);
           await this.genColors();
           this.success = false;
           this.colorName = '';
@@ -240,10 +240,8 @@ export default {
       localStorage.darkMode = !this.dark;
       this.dark = !this.dark;
     },
-    async addColorsToHistory(guessed = false) {
+    async addColorsToHistory(guessed = false, name = null) {
       const date = new Date();
-      // eslint-disable-next-line no-nested-ternary
-      // eslint-disable-next-line
       const hours = date.getHours().toString().length === 1 ? `0${date.getHours()}` : date.getHours();
       const minutes = date.getMinutes().toString().length === 1 ? `0${date.getMinutes()}` : date.getMinutes();
       const seconds = date.getSeconds().toString().length === 1 ? `0${date.getSeconds()}` : date.getSeconds();
@@ -252,6 +250,7 @@ export default {
       const dataColors = {
         colors: this.colors,
         guessedColor: guessed ? this.guessColor : null,
+        guessedColorName: name,
         date: date.toISOString().substring(0, 10),
         time,
         id: guessed ? this.prevId : id,
@@ -265,7 +264,7 @@ export default {
       this.history = await store.getAll();
     },
     async CheckDB() {
-      const db = await openDB('colorHistory', 9, {
+      const db = await openDB('colorHistory', 10, {
         upgrade(dataBase) {
           dataBase.createObjectStore('history', {
             keyPath: 'id',

@@ -21,7 +21,6 @@
     <v-card
       :dark="dark">
       <v-container>
-        <!-- {{getColorDates}} -->
         <v-list v-for="(date, i) in getColorDates" :key="i">
           <v-subheader class="headline">{{new Date(date).toDateString()}}</v-subheader>
           <v-divider />
@@ -38,8 +37,8 @@
                 </v-list-item-title>
                 <v-card flat>
                   <v-row
-                    v-for="(row, i) in color.colors"
-                    :key="i"
+                    v-for="(row, I) in color.colors"
+                    :key="I"
                     justify="center"
                     align="center">
                     <v-col
@@ -51,6 +50,7 @@
                         <Card
                           history
                           :color="col"
+                          :guessedColor="color.guessedColorName"
                           class="mx-auto"
                           @copy-color="copyColor"
                           :info="col === color.guessedColor"/>
@@ -116,7 +116,7 @@ export default {
       return this.colors.sort((a, b) => {
         const aTime = `${a.date} ${a.time}`;
         const bTime = `${b.date} ${b.time}`;
-        return new Date(aTime) - new Date(bTime);
+        return new Date(bTime) - new Date(aTime);
       });
     },
     getColorDates() {
@@ -153,7 +153,7 @@ export default {
           this.text = `Copied ${color}`;
           this.showSnack = true;
         }).catch((err) => {
-          this.text = err.text;
+          this.text = err.message;
           this.showSnack = true;
         });
     },
