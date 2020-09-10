@@ -119,8 +119,8 @@ export default {
     errorText: '',
     colorGuess: '',
     colorName: '',
-    id: '',
     guessed: 0,
+    id: '',
   }),
   async beforeMount() {
     await this.prepare();
@@ -264,16 +264,20 @@ export default {
       this.history = await store.getAll();
     },
     async CheckDB() {
-      const db = await openDB('colorHistory', 10, {
-        upgrade(dataBase) {
-          if (!dataBase.objectStoreNames.includes('history')) {
-            dataBase.createObjectStore('history', {
-              keyPath: 'id',
-            });
-          }
-        },
-      });
-      this.db = db;
+      try {
+        const db = await openDB('colorHistory', 10, {
+          upgrade(dataBase) {
+            if (dataBase.objectStoreNames[0] !== 'history') {
+              dataBase.createObjectStore('history', {
+                keyPath: 'id',
+              });
+            }
+          },
+        });
+        this.db = db;
+      } catch (error) {
+        this.test = error;
+      }
     },
   },
 };
