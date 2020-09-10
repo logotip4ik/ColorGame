@@ -40,7 +40,7 @@
               align-self="center">
               <v-fade-transition>
                 <Card
-                  @clicked-color="cliked"
+                  @clicked-color="clicked"
                   :color="color"/>
               </v-fade-transition>
             </v-col>
@@ -180,7 +180,7 @@ export default {
         this.guessed = guessed - 1;
       }
     },
-    async cliked(color) {
+    async clicked(color) {
       const guess = this.guessColor;
       if (color === guess) {
         this.changeScore(true);
@@ -202,7 +202,7 @@ export default {
           await this.genColors();
           this.success = false;
           this.colorName = '';
-        }, 3000);
+        }, 2000);
       } else {
         this.changeScore();
         this.nope = true;
@@ -266,9 +266,11 @@ export default {
     async CheckDB() {
       const db = await openDB('colorHistory', 10, {
         upgrade(dataBase) {
-          dataBase.createObjectStore('history', {
-            keyPath: 'id',
-          });
+          if (!dataBase.objectStoreNames.includes('history')) {
+            dataBase.createObjectStore('history', {
+              keyPath: 'id',
+            });
+          }
         },
       });
       this.db = db;
