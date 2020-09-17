@@ -5,16 +5,22 @@
     transition="dialog-bottom-transition"
     :value="showHistory">
     <v-toolbar>
+      <v-btn
+        icon
+        :dark="dark"
+        @click="$emit('close')">
+        <v-icon>
+          mdi-close
+        </v-icon>
+      </v-btn>
       <v-toolbar-title>History</v-toolbar-title>
       <v-spacer />
       <v-toolbar-items>
         <v-btn
-          text
-          :dark="dark"
-          @click="$emit('close')">
-          <v-icon>
-            mdi-close
-          </v-icon>
+          icon
+          color="red darken-1"
+          @click="$emit('delete-history')">
+          <v-icon large>mdi-delete-empty-outline</v-icon>
         </v-btn>
       </v-toolbar-items>
     </v-toolbar>
@@ -126,7 +132,7 @@ export default {
         const date = this.sortedColors[i]?.date;
         res.add(date);
       }
-      return Array.from(res);
+      return Array.from(res).sort((a, b) => new Date(b) - new Date(a));
     },
     getColorsByDate() {
       const res = [];
@@ -138,6 +144,7 @@ export default {
         });
         res.push(dateArr);
       }
+      console.log(res);
       return res;
     },
   },

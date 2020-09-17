@@ -74,6 +74,7 @@
         :dark="dark"
         :colors="history"
         :show="showHistory"
+        @delete-history="deleteHistory"
         @close="showHistory = !showHistory"/>
     </v-main>
   </v-app>
@@ -262,6 +263,11 @@ export default {
     async getAllColorHistory() {
       const store = this.db.transaction('history', 'readonly').objectStore('history');
       this.history = await store.getAll();
+    },
+    async deleteHistory() {
+      this.showHistory = false;
+      this.db.clear();
+      this.history = [];
     },
     async CheckDB() {
       try {
