@@ -144,7 +144,6 @@ export default {
         });
         res.push(dateArr);
       }
-      console.log(res);
       return res;
     },
   },

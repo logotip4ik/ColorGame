@@ -266,7 +266,7 @@ export default {
     },
     async deleteHistory() {
       this.showHistory = false;
-      this.db.clear();
+      await this.db.clear('history');
       this.history = [];
     },
     async CheckDB() {
